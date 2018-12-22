@@ -1,4 +1,5 @@
 import twint
+from itertools import zip_longest
 
 
 def get_users_from_file(file_name):
@@ -41,43 +42,79 @@ def search_phrases_in_handle(handle, search_phrases, output_folder):
     return error_count
 
 
-def get_followers(follow_list, output_folder):
-    error_count = 0
-
-    for handle in follow_list:
-        c = twint.Config()
-        c.Username = handle
-        c.Output = output_folder
-        c.Store_csv = True
-        c.Limit = 5000
-
-        try:
-            twint.run.Followers(c)
-        except TypeError:
-            error_count += 1
-
-    return error_count
-
-
-def get_friends(handle, output_folder):
+def get_followers(handle, output_file_or_folder):
     error_count = 0
 
     c = twint.Config()
     c.Username = handle
-    c.Output = output_folder
-    c.Store_csv = True
-    # c.User_full = False
+    c.Output = output_file_or_folder
+    # c.Store_csv = True
+    c.Limit = 5000
 
     try:
-        twint.run.Following(c)
+        twint.run.Followers(c)
     except TypeError:
         error_count += 1
 
     return error_count
 
 
+def get_friends(handles, output_file_or_folder):
+    # error_count = 0
+
+    for handle in handles:
+        c = twint.Config()
+        c.Username = handle
+        c.Output = output_file_or_folder
+        # c.Store_csv = True
+        # c.User_full = False
+        try:
+            twint.run.Following(c)
+        except TypeError:
+            continue
+            # error_count += 1
+        except TimeoutError:
+            return handles.index(handle)
+
+    return None
+
+
 # search_phrases = ['Trump', 'Pres', 'POTUS', 'President', 'Prez']
 # ec = search_for_all_handles(get_users_from_file('users.txt'), search_phrases, 'test_search')
 
-get_friends('mike_pence', 'test_friends_output')
-get_friends('mike_pence', 'test_friends_output')
+actor_handles = ['JoeBiden', 'HillaryClinton']
+for actor_handle in actor_handles:
+    file_start = 'actor_files/' + actor_handle
+    get_followers(actor_handle, file_start + '-followers.txt')
+
+for actor_handle in actor_handles:
+    file_start = 'actor_files/' + actor_handle
+
+    # parse the follower list
+    follower_list = []
+    with open(file_start + '-followers.txt', 'r') as f:
+        for line in f:
+            if '|' not in line:
+                follower_list.append(line.rstrip())
+
+    res = get_friends(follower_list, file_start + '-friends.txt')
+    while res is not None:
+        res = get_friends(follower_list[res:], file_start + '-friends.txt')
+
+    followers_dict = {}
+    with open(file_start + '-friends.txt', 'r') as f:
+        last_seen = ''
+        for line in f:
+            if '|' in line:
+                last_seen = line.split(' | ')[2][1:]
+                if last_seen not in followers_dict:
+                    followers_dict[last_seen] = []
+            else:
+                followers_dict[last_seen].append(line.rstrip())
+
+    with open(file_start + '-friends.txt', 'w') as f:
+        f.write(','.join(followers_dict.keys()) + '\n')
+        for line in zip_longest(*followers_dict.values(), fillvalue=''):
+            f.write(','.join(line) + '\n')
+
+print('done')
