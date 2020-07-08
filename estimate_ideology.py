@@ -4,6 +4,7 @@ import rpy2.robjects as robjects
 robjects.r['load'](r'/path/to/refdataCA.rdata')  # TODO: Edit path to file
 refdataCAr = robjects.r['refdataCA']
 
+
 def supplementaryRows(res, points):
     svphi = np.array(res['sv'][:res['nd']])
 
@@ -30,6 +31,7 @@ refdataCA = {'nd': int(refdataCAr[0][0]),
              'qs': {'value': np.array(refdataCAr[6][0]),
                     'theta': np.array(refdataCAr[6][1])}}  # Id, handle
 
+
 def estimateIdeology2(user, friends, verbose=True, exact=False):
     y = np.isin(refdataCA['colnames'], friends).astype(int)
 
@@ -37,7 +39,8 @@ def estimateIdeology2(user, friends, verbose=True, exact=False):
         return None
 
     values = supplementaryRows(refdataCA, y)
-    theta = refdataCA['qs']['theta'][np.argmin(np.abs(values[0] - refdataCA['qs']['value']))] # 2,0 == qs, theta
+    theta = refdataCA['qs']['theta'][np.argmin(
+        np.abs(values[0] - refdataCA['qs']['value']))]  # 2,0 == qs, theta
 
     if abs(theta) == np.inf:  # for analysis
         theta = None
