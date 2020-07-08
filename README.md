@@ -1,9 +1,16 @@
 # twitter-ideology
-We want to use nyu twitter ideology estimation tool
-1. Download the refdataCA.rdata file to use it, format path in actor_intersect.py
-2. Scrape all followers of actors used for estimation in this tool (get_all_actor_followers() in
-actor_intersect.py without any indexing into actors).
-3. Index all actors into a json file (index_followers() in actor_intersect.py)
-4. (optional) Get the ideology scores of actor followers by using get_actor_scores()
-5. Gotta get tweets now, use tweet_scraping.py
-6. Now we got it all, use analyze_tweets.py with estimate_ideology.py to 
+
+A tool that can analyze the ideologies of a large amount of twitter users using the algorithm provided [here](https://github.com/pablobarbera/twitter_ideology).
+
+This tool uses python 3.6+
+
+1. `git clone https://github.com/asavage1/twitter-ideology.git`
+2. Download refdataCA.rdata from the link above (file in the repo is located [here](https://github.com/pablobarbera/twitter_ideology/blob/master/pkg/tweetscores/data/refdataCA.rdata))
+3. Edit the path to the "refdataCA.rdata" you just downloaded in "twitter_ideology.py" and "estimate_ideology.py"
+4. Create a "keys.json" file which contains a key for the Google perspective api you plan on using. It should contain something like this:
+
+```
+{"perspective_key":"ExampleKey"}
+```
+
+4. `python twitter_ideology.py` should do the rest.

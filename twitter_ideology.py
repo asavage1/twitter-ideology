@@ -184,7 +184,9 @@ if __name__ == '__main__':
 
     scrape_tweets(keyword_set_names, keyword_sets, years)
 
-    perspective_key = '...'  # TODO: Insert perspective key
+    with open('keys.json') as f:
+        keys = json.load(f)
+    perspective_key = keys['perspective_key']
     service = discovery.build(
         'commentanalyzer', 'v1alpha1', developerKey=perspective_key)
     analyze_tweets(actors, followers, keyword_set_names,
