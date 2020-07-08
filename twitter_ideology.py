@@ -48,7 +48,8 @@ def reverse_index_all_followers(users, index_filename=None):
 
 
 def scrape_tweets(keyword_set_names, keyword_sets, years, limit=2500):
-    get_query = lambda search_words: r'"' + r'" OR "'.join(search_words) + r'"'
+    def get_query(search_words): return r'"' + \
+        r'" OR "'.join(search_words) + r'"'
 
     for index, keyword_set in enumerate(keyword_sets):
         for year in years:
@@ -93,7 +94,7 @@ def get_perspective(ser, text):
         return ConnectionResetError
 
 
-def analyze_tweets(actors, followers, topics, actor_filename, common_filename):
+def analyze_tweets(actors, followers, topics, actor_filename, common_filename, service):
     with open(actor_filename, 'w') as csvwritefileactor:
         with open(common_filename, 'w') as csvwritefilecommon:
             csv_writer_actor = csv.writer(csvwritefileactor)
@@ -104,7 +105,7 @@ def analyze_tweets(actors, followers, topics, actor_filename, common_filename):
                 ['Date', 'Time', 'User', '(n)Replies', '(n)Retweets', 'Tweet', 'Topic', 'Ideology Score', 'Toxicity'])
             writer = None
 
-            perspective_window = 100  # in seconds
+            perspective_window = 105  # in seconds
             nrequests = 0
             window_start = time.time()
             max_requests = 1000
@@ -117,7 +118,8 @@ def analyze_tweets(actors, followers, topics, actor_filename, common_filename):
                         if headers is None:
                             headers = row
                         else:
-                            qi = lambda col_header: row[headers.index(col_header)]
+                            def qi(
+                                col_header): return row[headers.index(col_header)]
                             user = qi('username')
 
                             if user in actors:
@@ -125,11 +127,13 @@ def analyze_tweets(actors, followers, topics, actor_filename, common_filename):
                             else:
                                 writer = csv_writer_common
 
-                            ideology = estimateIdeology2(user, followers[user]) if user in followers else 0
+                            ideology = estimateIdeology2(
+                                user, followers[user]) if user in followers else 0
 
                             tweet = qi('tweet')
                             if nrequests == max_requests:
-                                sleep_time = perspective_window - (time.time() - window_start)
+                                sleep_time = perspective_window - \
+                                    (time.time() - window_start)
                                 if sleep_time > 0:
                                     time.sleep(sleep_time)
                                 else:
@@ -153,14 +157,17 @@ if __name__ == '__main__':
     robjects.r['load'](r'/path/to/refdataCA.rdata')  # TODO: edit path
     actors = robjects.r['refdataCA'][4]
     get_all_followers(actors)
-    followers = reverse_index_all_followers(actors, 'indexed_actor_followers')
+    followers = reverse_index_all_followers(
+        actors, 'indexed_actor_followers.json')
 
     years = ['2013', '2014', '2017', '2018']
     keyword_sets = [
-        {'Obamacare', 'Affordable Care Act', 'American Health Care Act', 'Trumpcare', 'RyanCare', 'repeal and replace'},
+        {'Obamacare', 'Affordable Care Act', 'American Health Care Act',
+            'Trumpcare', 'RyanCare', 'repeal and replace'},
         {'school shooting', 'Sandy Hook', 'Parkland', 'Marjory Stoneman Douglas', 'gun rights', 'gun control', 'NRA',
          'Second Amendment', '2nd Amendment'},
-        {'the environment', 'climate change', 'global warming', 'carbon emissions', 'sustainability', 'fossil fuels'},
+        {'the environment', 'climate change', 'global warming',
+            'carbon emissions', 'sustainability', 'fossil fuels'},
         {'government deficit', 'national debt', 'budget deficit', 'entitlements', 'welfare', 'social security',
          'Medicare',
          'minimum wage', 'unemployment', 'tax reform', 'tax plan', 'Tax Cuts and Jobs Act', 'economic inequality',
@@ -178,5 +185,7 @@ if __name__ == '__main__':
     scrape_tweets(keyword_set_names, keyword_sets, years)
 
     perspective_key = '...'  # TODO: Insert perspective key
-    service = discovery.build('commentanalyzer', 'v1alpha1', developerKey=perspective_key)
-    analyze_tweets(actors, followers, keyword_set_names, 'actor_tweets.csv', 'common_tweets.csv')
+    service = discovery.build(
+        'commentanalyzer', 'v1alpha1', developerKey=perspective_key)
+    analyze_tweets(actors, followers, keyword_set_names,
+                   'actor_tweets.csv', 'common_tweets.csv', service)
