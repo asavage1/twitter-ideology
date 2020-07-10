@@ -8,25 +8,7 @@ import rpy2.robjects as robjects
 from googleapiclient import discovery, errors
 
 from estimate_ideology import estimateIdeology2
-
-
-def get_followers(user, output_file):
-    c = twint.Config()
-    c.Username = user
-    c.Output = output_file
-
-    try:
-        twint.run.Followers(c)
-    except TimeoutError:
-        time.sleep(5)
-        get_followers(user, output_file)
-    except TypeError:
-        pass
-
-
-def get_all_followers(users):
-    for user in users:
-        get_followers(user, f'actor_followers/{user}.txt')
+from get_followers import get_all_followers
 
 
 def reverse_index_all_followers(users, index_filename=None):
